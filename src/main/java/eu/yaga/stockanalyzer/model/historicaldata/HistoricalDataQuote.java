@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  * Historical stock exchange rate
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonNaming(PropertyNamingStrategy.PascalCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
 public class HistoricalDataQuote {
     private String symbol;
     private String date;

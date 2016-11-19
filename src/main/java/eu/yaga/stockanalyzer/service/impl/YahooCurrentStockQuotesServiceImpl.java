@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.SimpleDateFormat;
-
 /**
  * Implementation of the {@link CurrentStockQuotesService}
  */
@@ -22,9 +20,6 @@ public class YahooCurrentStockQuotesServiceImpl implements CurrentStockQuotesSer
     static final String YQL_QUERY_POSTFIX = "&format=json&env=store://datatables.org/alltableswithkeys";
     static final String YQL_QUERY_QUOTE = "?q=select * from yahoo.finance.quotes where symbol = '%s'";
     static final String YQL_QUERY_EXCHANGE = "?q=select * from yahoo.finance.xchange where pair = '%sEUR'";
-
-
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
     @Autowired
     private RestTemplate restTemplate;

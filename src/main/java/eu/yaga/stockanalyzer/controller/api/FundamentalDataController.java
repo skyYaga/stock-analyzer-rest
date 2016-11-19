@@ -3,7 +3,6 @@ package eu.yaga.stockanalyzer.controller.api;
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
 import eu.yaga.stockanalyzer.service.FundamentalDataService;
-import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
 import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.text.ParseException;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * REST Controller for fundamental data
@@ -41,12 +39,6 @@ class FundamentalDataController {
 
     @Autowired
     private FundamentalDataRepository fundamentalDataRepository;
-
-    @Autowired
-    private HistoricalExchangeRateService historicalExchangeRateService;
-
-    private final AtomicLong counter = new AtomicLong();
-
 
     /**
      * This Controller returns all symbols with cached fundamental data<br/>

@@ -2,7 +2,6 @@ package eu.yaga.stockanalyzer.controller.client;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
-import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +26,6 @@ class StockDetailController {
 
     @Autowired
     private FundamentalDataRepository fundamentalDataRepository;
-
-    @Autowired
-    private StockRatingBusinessService stockRatingBusinessService;
 
     @RequestMapping(value = "/stockdetail/{symbol:.+}", method = RequestMethod.GET)
     public String stock(@PathVariable String symbol, Model model) {

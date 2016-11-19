@@ -12,7 +12,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestTemplate;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
  * Tests for the {@link YahooHistoricalExchangeRateServiceImpl}
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = Application.class)
+@SpringBootTest(classes = Application.class)
 @WebAppConfiguration
 public class YahooHistoricalHistoricalDataQuoteServiceImplTest {
 
@@ -130,7 +130,7 @@ public class YahooHistoricalHistoricalDataQuoteServiceImplTest {
         String from = "2016-01-31";
         String to = "2016-01-01";
 
-        List<HistoricalDataQuote> erList = service.getHistoricalExchangeRates(symbol, from, to);
+        service.getHistoricalExchangeRates(symbol, from, to);
     }
 
     @Test(expected = RuntimeException.class)
@@ -138,7 +138,7 @@ public class YahooHistoricalHistoricalDataQuoteServiceImplTest {
         String from = "2016-01-31";
         String to = "2016-01-31";
 
-        List<HistoricalDataQuote> erList = service.getHistoricalExchangeRates(symbol, from, to);
+        service.getHistoricalExchangeRates(symbol, from, to);
     }
 
     private YqlHistoricalDataQuery generateMock(String symbol, String fromString, String toString) throws Exception {

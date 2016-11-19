@@ -120,10 +120,12 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
 
             List<HistoricalDataQuote> ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
             LocalDate dateTmp = date;
-            while (ratesSymbol.size() < 2) {
+            int cnt = 0;
+            while (ratesSymbol.size() < 2 && cnt < 10) {
                 dateTmp = dateTmp.minusDays(1);
                 priorDay = dateTmp.format(dtf);
                 ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
+                cnt ++;
             }
 
             List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
@@ -260,18 +262,22 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
                 LocalDate baseDateMinus = baseDate.minusDays(1);
 
                 List<HistoricalDataQuote> ratesToday = getHistoricalExchangeRates(symbol, baseDateMinus.format(dtf), baseDate.format(dtf));
-                while (ratesToday.size() < 1) {
+                int cnt = 0;
+                while (ratesToday.size() < 1 && cnt < 10) {
                     baseDateMinus = baseDateMinus.minusDays(1);
                     ratesToday = getHistoricalExchangeRates(symbol, baseDateMinus.format(dtf), baseDate.format(dtf));
+                    cnt++;
                 }
 
                 // Find data for compareDate
                 LocalDate compareDateMinus = compareDate.minusDays(1);
 
                 List<HistoricalDataQuote> ratesCompareDate = getHistoricalExchangeRates(symbol, compareDateMinus.format(dtf), compareDate.format(dtf));
-                while (ratesCompareDate.size() < 1) {
+                cnt = 0;
+                while (ratesCompareDate.size() < 1 && cnt < 10) {
                     compareDateMinus = compareDateMinus.minusDays(1);
                     ratesCompareDate = getHistoricalExchangeRates(symbol, compareDateMinus.format(dtf), compareDate.format(dtf));
+                    cnt++;
                 }
 
                 double closeToday = ratesToday.get(0).getClose();

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  * Exchange Rate
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonNaming(PropertyNamingStrategy.PascalCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
 public class Rate {
 
     private double rate;

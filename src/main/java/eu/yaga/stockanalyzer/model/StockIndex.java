@@ -8,7 +8,8 @@ public enum StockIndex {
     MDAX("^MDAXI", "MDAX", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=323547&interval=D1&assetName=MDAX&exchange=Xetra&dateStart="),
     TECDAX("^TECDAX", "TecDAX", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=6623216&interval=D1&assetName=TecDAX&exchange=Xetra&dateStart="),
     SP500("^GSPC", "S&P 500", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=4359526&interval=D1&assetName=S%2526amp%253BP%2520500&exchange=au%C3%9Ferb%C3%B6rslich&dateStart="),
-    NASDAQ100("^NDX", "NASDAQ 100", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=325104&interval=D1&assetName=NASDAQ&exchange=Nasdaq+Global+Indices&dateStart=");
+    NASDAQ100("^NDX", "NASDAQ 100", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=325104&interval=D1&assetName=NASDAQ&exchange=Nasdaq+Global+Indices&dateStart="),
+    EUROSTOXX50("^STOXX50E", "EURO STOXX 50", "http://www.onvista.de/onvista/boxes/popup/historicalquote.json?notationId=193736&interval=D1&assetName=EURO%2520STOXX%252050&exchange=au%C3%9Ferb%C3%B6rslich&dateStart=");
 
     private final String symbol;
     private final String description;

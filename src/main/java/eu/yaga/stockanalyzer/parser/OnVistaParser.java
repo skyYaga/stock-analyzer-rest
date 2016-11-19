@@ -33,7 +33,6 @@ public class OnVistaParser {
     private static final Logger log = LoggerFactory.getLogger(OnVistaParser.class);
 
     private String html;
-    private String symbol;
     private FundamentalData fundamentalData;
     private Matcher matcher;
 
@@ -41,15 +40,12 @@ public class OnVistaParser {
 
     public FundamentalData getFundamentalData(String html, String symbol, FundamentalData fd) {
         this.html = html;
-        this.symbol = symbol;
 
         if (fd == null) {
             fundamentalData = new FundamentalData();
         } else {
             fundamentalData = fd;
         }
-
-        Matcher matcher;
 
         log.info(html);
 
@@ -95,8 +91,15 @@ public class OnVistaParser {
         fundamentalData.setAsk(currentRate);
 
         // Gewinn pro Aktie
-        fundamentalData.setEpsNextYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
-        fundamentalData.setEpsCurrentYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+        double epsNextYear = Double.parseDouble(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", "."));
+        if (epsNextYear == 0) {
+            log.warn("no eps found for " + fundamentalData.getNextYear() + ". Trying current and last year...");
+            fundamentalData.setEpsNextYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+            fundamentalData.setEpsCurrentYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getLastYear()).replace(",", ".")));
+        } else {
+            fundamentalData.setEpsNextYear(epsNextYear);
+            fundamentalData.setEpsCurrentYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+        }
 
         // 5 Jahre
         fundamentalData.setPer5years(calculatePer5years(currentRate, earningsPerShare));
@@ -536,8 +539,18 @@ public class OnVistaParser {
         double twoAgo = Double.parseDouble(earningsPerShare.get(fundamentalData.getTwoYearsAgo()).replace(",", "."));
         double threeAgo = Double.parseDouble(earningsPerShare.get(fundamentalData.getThreeYearsAgo()).replace(",", "."));
 
-        double fiveYearsEarnings = (next + current + last + twoAgo + threeAgo) / 5;
-        double per5years = currentRate / fiveYearsEarnings;
+        double per5years;
+        if (next == 0) {
+            if (current != 0 && last != 0 && twoAgo != 0 && threeAgo != 0) {
+                double fourYearsEarnings = (current + last + twoAgo + threeAgo) / 4;
+                per5years = currentRate / fourYearsEarnings;
+            } else {
+                per5years = 999;
+            }
+        } else {
+            double fiveYearsEarnings = (next + current + last + twoAgo + threeAgo) / 5;
+            per5years = currentRate / fiveYearsEarnings;
+        }
 
         return per5years;
     }

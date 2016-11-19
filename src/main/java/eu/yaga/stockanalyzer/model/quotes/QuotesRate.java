@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  * quotes rate
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonNaming(PropertyNamingStrategy.PascalCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategy.UpperCamelCaseStrategy.class)
 public class QuotesRate {
 
     private double ask;
