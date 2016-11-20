@@ -33,23 +33,20 @@ public class OnVistaParser {
     private static final Logger log = LoggerFactory.getLogger(OnVistaParser.class);
 
     private String html;
-    private String symbol;
     private FundamentalData fundamentalData;
     private Matcher matcher;
 
     public OnVistaParser() {}
 
-    public FundamentalData getFundamentalData(String html, String symbol, FundamentalData fd) {
+    public FundamentalData getFundamentalData(String html, FundamentalData fd) {
         this.html = html;
-        this.symbol = symbol;
+        String symbol = fd.getSymbol();
 
         if (fd == null) {
             fundamentalData = new FundamentalData();
         } else {
             fundamentalData = fd;
         }
-
-        Matcher matcher;
 
         log.info(html);
 

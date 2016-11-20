@@ -6,8 +6,6 @@ import eu.yaga.stockanalyzer.service.impl.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -52,13 +50,4 @@ public class ApplicationConfig {
         return new MailjetEmailServiceImpl();
     }
 
-    @Bean
-    public MongoUserDetailsService getMongoUserDetailsService() {
-        return new MongoUserDetailsService();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

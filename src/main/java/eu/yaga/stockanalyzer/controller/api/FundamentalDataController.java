@@ -3,7 +3,6 @@ package eu.yaga.stockanalyzer.controller.api;
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
 import eu.yaga.stockanalyzer.service.FundamentalDataService;
-import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
 import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,15 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * REST Controller for fundamental data
@@ -41,11 +36,6 @@ class FundamentalDataController {
 
     @Autowired
     private FundamentalDataRepository fundamentalDataRepository;
-
-    @Autowired
-    private HistoricalExchangeRateService historicalExchangeRateService;
-
-    private final AtomicLong counter = new AtomicLong();
 
 
     /**
@@ -70,6 +60,18 @@ class FundamentalDataController {
         }
 
         return sortedFundamentalDataList;
+    }
+
+    /**
+     * This Controller saves fundamental data and returns it<br/>
+     *
+     * @param fundamentalData fundamental data
+     * @return the fundamental data
+     */
+    @RequestMapping(value = "", method = RequestMethod.POST)
+    public FundamentalData saveFundamentalData(@RequestBody FundamentalData fundamentalData) {
+        FundamentalData savedFd = fundamentalDataRepository.save(fundamentalData);
+        return savedFd;
     }
 
     /**

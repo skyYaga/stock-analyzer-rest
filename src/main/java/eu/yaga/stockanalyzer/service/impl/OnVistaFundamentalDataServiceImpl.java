@@ -6,8 +6,6 @@ import eu.yaga.stockanalyzer.service.FundamentalDataService;
 import eu.yaga.stockanalyzer.util.HttpHelper;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.MalformedURLException;
@@ -22,8 +20,6 @@ public class OnVistaFundamentalDataServiceImpl implements FundamentalDataService
     private
     OnVistaParser onVistaParser;
 
-    private static final Logger log = LoggerFactory.getLogger(OnVistaFundamentalDataServiceImpl.class);
-
     /**
      * This method returns fundamental data of the given stock
      *
@@ -34,7 +30,7 @@ public class OnVistaFundamentalDataServiceImpl implements FundamentalDataService
     public FundamentalData getFundamentalData(String symbol, FundamentalData fundamentalData) {
         URL url = getUrlForSymbol(symbol);
         String html = HttpHelper.queryHTML(url);
-        return onVistaParser.getFundamentalData(html, symbol, fundamentalData);
+        return onVistaParser.getFundamentalData(html, fundamentalData);
     }
 
     private URL getUrlForSymbol(String symbol) {
