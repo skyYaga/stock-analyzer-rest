@@ -5,6 +5,7 @@ import eu.yaga.stockanalyzer.model.StockType;
 import eu.yaga.stockanalyzer.model.historicaldata.HistoricalDataQuote;
 import eu.yaga.stockanalyzer.service.CurrentStockQuotesService;
 import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +42,7 @@ public class OnVistaParser {
     public FundamentalData getFundamentalData(String html, FundamentalData fd) {
         this.html = html;
         String symbol = fd.getSymbol();
-
-        if (fd == null) {
-            fundamentalData = new FundamentalData();
-        } else {
-            fundamentalData = fd;
-        }
+        fundamentalData = fd;
 
         log.info(html);
 
@@ -92,8 +88,8 @@ public class OnVistaParser {
         fundamentalData.setAsk(currentRate);
 
         // Gewinn pro Aktie
-        fundamentalData.setEpsNextYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
-        fundamentalData.setEpsCurrentYear(Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+        fundamentalData.setEpsNextYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
+        fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
 
         // 5 Jahre
         fundamentalData.setPer5years(calculatePer5years(currentRate, earningsPerShare));
@@ -102,6 +98,14 @@ public class OnVistaParser {
 
         return fundamentalData;
     }
+
+    private double parseToDoubleOrZero(String numberString) {
+        if (NumberUtils.isCreatable(numberString)) {
+            return Double.parseDouble(numberString);
+        }
+        return 0;
+    }
+
 
     /**
      * parses the fiscal year end (Geschäftsjahresende) for the current Stock
@@ -403,7 +407,7 @@ public class OnVistaParser {
         }
 
         NumberFormat format = NumberFormat.getInstance(Locale.GERMANY);
-        Number number = 0;
+        Number number;
         try {
             number = format.parse(mc);
         } catch (ParseException e) {
@@ -522,21 +526,25 @@ public class OnVistaParser {
      * @return 5 years PER
      */
     private double calculatePer5years(double currentRate, Map<String, String> earningsPerShare) {
-        double next = Double.parseDouble(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", "."));
-        double current = Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", "."));
+        double next = parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", "."));
+        double current = parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", "."));
         // If the data is not up to date at onvista...
         String lastYearEps = earningsPerShare.get(fundamentalData.getLastYear());
         if (lastYearEps == null) {
             lastYearEps = earningsPerShare.get(fundamentalData.getLastYear() + "e");
         }
-        double last = Double.parseDouble(lastYearEps.replace(",", "."));
-        double twoAgo = Double.parseDouble(earningsPerShare.get(fundamentalData.getTwoYearsAgo()).replace(",", "."));
-        double threeAgo = Double.parseDouble(earningsPerShare.get(fundamentalData.getThreeYearsAgo()).replace(",", "."));
+        double last = parseToDoubleOrZero(lastYearEps.replace(",", "."));
+        double twoAgo = parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getTwoYearsAgo()).replace(",", "."));
+        double threeAgo = parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getThreeYearsAgo()).replace(",", "."));
 
-        double fiveYearsEarnings = (next + current + last + twoAgo + threeAgo) / 5;
-        double per5years = currentRate / fiveYearsEarnings;
+        double fiveYearsEarnings;
+        if (next == 0 && current != 0 && last != 0 && twoAgo != 0 && threeAgo != 0) {
+            fiveYearsEarnings = (current + last + twoAgo + threeAgo) / 4;
+        } else {
+            fiveYearsEarnings = (next + current + last + twoAgo + threeAgo) / 5;
+        }
 
-        return per5years;
+        return currentRate / fiveYearsEarnings;
     }
 
     /**
@@ -547,7 +555,7 @@ public class OnVistaParser {
      * @return the current PER
      */
     private double calculatePer(double currentRate, Map<String, String> earningsPerShare) {
-        double current = Double.parseDouble(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", "."));
+        double current = parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", "."));
         return currentRate / current;
     }
 }
