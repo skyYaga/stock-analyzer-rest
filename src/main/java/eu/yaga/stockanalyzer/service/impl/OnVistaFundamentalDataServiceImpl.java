@@ -36,9 +36,11 @@ public class OnVistaFundamentalDataServiceImpl implements FundamentalDataService
     private URL getUrlForSymbol(String symbol) {
         URL resultUrl = null;
 
+        String searchSymbol = symbol.split("\\.")[0];
+
         try {
             URL searchUrl =
-                    new URL("http://www.onvista.de/onvista/boxes/assetSearch.json?doSubmit=Suchen&portfolioName=&searchValue=" + symbol);
+                    new URL("http://www.onvista.de/onvista/boxes/assetSearch.json?doSubmit=Suchen&portfolioName=&searchValue=" + searchSymbol);
 
             String html = HttpHelper.queryHTML(searchUrl);
             JSONObject jsonObject = new JSONObject(html);
