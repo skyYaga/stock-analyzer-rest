@@ -30,6 +30,11 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public AnalystEstimationService getAnalystEstimationService() {
+        return new AnalystEstimationImpl();
+    }
+
+    @Bean
     public CurrentStockQuotesService getCurrentStockQuotesService() {
         return new YahooCurrentStockQuotesServiceImpl();
     }

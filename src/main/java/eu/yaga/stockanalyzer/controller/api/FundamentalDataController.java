@@ -2,6 +2,7 @@ package eu.yaga.stockanalyzer.controller.api;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
+import eu.yaga.stockanalyzer.service.AnalystEstimationService;
 import eu.yaga.stockanalyzer.service.EarningsRevisionService;
 import eu.yaga.stockanalyzer.service.FundamentalDataService;
 import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
@@ -31,6 +32,9 @@ class FundamentalDataController {
 
     @Autowired
     private EarningsRevisionService earningsRevisionService;
+
+    @Autowired
+    private AnalystEstimationService analystEstimationService;
 
     @Autowired
     private StockRatingBusinessService stockRatingBusinessService;
@@ -74,8 +78,7 @@ class FundamentalDataController {
      */
     @RequestMapping(value = "", method = RequestMethod.POST)
     public FundamentalData saveFundamentalData(@RequestBody FundamentalData fundamentalData) {
-        FundamentalData savedFd = fundamentalDataRepository.save(fundamentalData);
-        return savedFd;
+        return fundamentalDataRepository.save(fundamentalData);
     }
 
     /**
@@ -104,6 +107,8 @@ class FundamentalDataController {
         log.info("Got new Fundamental Data: " + newFundamentalData);
         newFundamentalData = earningsRevisionService.retrieveEarningsRevision(newFundamentalData);
         log.info("Got Earnings Revision: " + newFundamentalData.getEarningsRevision());
+        newFundamentalData = analystEstimationService.retrieveAnalystEstimation(newFundamentalData);
+        log.info("Got Analyst Estimation: " + newFundamentalData.getAnalystEstimation());
 
         if (fundamentalData != null) {
             fundamentalData.setSymbol(newFundamentalData.getSymbol());
@@ -119,6 +124,7 @@ class FundamentalDataController {
             fundamentalData.setPerCurrent(newFundamentalData.getPerCurrent());
             fundamentalData.setMarketCapitalization(newFundamentalData.getMarketCapitalization());
             fundamentalData.setEarningsRevision(newFundamentalData.getEarningsRevision());
+            fundamentalData.setAnalystEstimation(newFundamentalData.getAnalystEstimation());
         } else {
             fundamentalData = newFundamentalData;
         }
