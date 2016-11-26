@@ -1,6 +1,7 @@
 package eu.yaga.stockanalyzer.schedule;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
+import eu.yaga.stockanalyzer.model.FundamentalDataUrl;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
 import eu.yaga.stockanalyzer.service.EmailService;
 import org.slf4j.Logger;
@@ -50,6 +51,11 @@ class QuarterlyFiguresChecker {
             log.info("Checking... " + stock.getName());
             Date nextFigures = stock.getNextQuarterlyFigures();
 
+            String urls = "";
+            for (FundamentalDataUrl url : stock.getUrls()) {
+                urls = urls + url.getUrl() + "\n";
+            }
+
             if (nextFigures != null && nextFigures.before(today)) {
                 // Update date of last quarterly figures
                 stock.setLastQuarterlyFigures(nextFigures);
@@ -58,7 +64,7 @@ class QuarterlyFiguresChecker {
 
                 emailService.send("Neue Quartalszahlen: " + stock.getName() + " (" + stock.getSymbol() +")",
                         "Für " + stock.getName() + " wurden am " + stock.getLastQuarterlyFigures() +
-                        " neue Quartalszahlen veröffentlicht! \n" + stock.getUrls());
+                        " neue Quartalszahlen veröffentlicht! \n" + urls);
 
                 log.info("New quarterly figures released!");
             } else if (nextFigures == null && stock.getDate().before(oneWeekAgo)) {
@@ -66,7 +72,7 @@ class QuarterlyFiguresChecker {
                     fundamentalDataRepository.save(stock);
                     emailService.send("Quartalszahlen Datum prüfen: " + stock.getName() + " (" + stock.getSymbol() +")",
                         "Für " + stock.getName() + " wurden die letzten Quartalszahlen vor mehr als 3 Montaten veröffentlicht (" +
-                        stock.getLastQuarterlyFigures() + ") \n" + stock.getUrls());
+                        stock.getLastQuarterlyFigures() + ") \n" + urls);
                     log.info("Quarterly figures are out of date!");
                 }
             }

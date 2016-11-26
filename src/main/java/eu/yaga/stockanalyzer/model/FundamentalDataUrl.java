@@ -3,7 +3,7 @@ package eu.yaga.stockanalyzer.model;
 /**
  * Type for categorized URLs
  */
-class FundamentalDataUrl {
+public class FundamentalDataUrl {
 
     private FundamentalDataUrlType type;
     private String url;

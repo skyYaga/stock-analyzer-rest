@@ -25,6 +25,11 @@ public class ApplicationConfig {
     }
 
     @Bean
+    public EarningsRevisionService getEarningsRevisionService() {
+        return new FinanzenNetEarningsRevisionServiceImpl();
+    }
+
+    @Bean
     public CurrentStockQuotesService getCurrentStockQuotesService() {
         return new YahooCurrentStockQuotesServiceImpl();
     }

@@ -2,6 +2,7 @@ package eu.yaga.stockanalyzer.controller.api;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
+import eu.yaga.stockanalyzer.service.EarningsRevisionService;
 import eu.yaga.stockanalyzer.service.FundamentalDataService;
 import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
 import org.slf4j.Logger;
@@ -27,6 +28,9 @@ class FundamentalDataController {
 
     @Autowired
     private FundamentalDataService fundamentalDataService;
+
+    @Autowired
+    private EarningsRevisionService earningsRevisionService;
 
     @Autowired
     private StockRatingBusinessService stockRatingBusinessService;
@@ -94,9 +98,12 @@ class FundamentalDataController {
     @RequestMapping(value = "/{symbol}/refresh", method = RequestMethod.GET)
     public FundamentalData refreshFundamentalData(@PathVariable String symbol) throws ParseException {
         FundamentalData fundamentalData = fundamentalDataRepository.findBySymbolOrderByDateDesc(symbol);
+        log.info("Got Fundamental Data: " + fundamentalData);
 
         FundamentalData newFundamentalData = fundamentalDataService.getFundamentalData(symbol, fundamentalData);
-        log.info("Got Fundamental Data: " + fundamentalData);
+        log.info("Got new Fundamental Data: " + newFundamentalData);
+        newFundamentalData = earningsRevisionService.retrieveEarningsRevision(newFundamentalData);
+        log.info("Got Earnings Revision: " + newFundamentalData.getEarningsRevision());
 
         if (fundamentalData != null) {
             fundamentalData.setSymbol(newFundamentalData.getSymbol());
@@ -111,6 +118,7 @@ class FundamentalDataController {
             fundamentalData.setPer5years(newFundamentalData.getPer5years());
             fundamentalData.setPerCurrent(newFundamentalData.getPerCurrent());
             fundamentalData.setMarketCapitalization(newFundamentalData.getMarketCapitalization());
+            fundamentalData.setEarningsRevision(newFundamentalData.getEarningsRevision());
         } else {
             fundamentalData = newFundamentalData;
         }

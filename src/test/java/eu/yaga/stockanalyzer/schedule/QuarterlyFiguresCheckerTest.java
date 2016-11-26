@@ -1,6 +1,7 @@
 package eu.yaga.stockanalyzer.schedule;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
+import eu.yaga.stockanalyzer.model.FundamentalDataUrl;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
 import eu.yaga.stockanalyzer.service.EmailService;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class QuarterlyFiguresCheckerTest {
         verify(fundamentalDataRepository, times(1)).findAll();
         verify(fundamentalDataRepository, times(1)).save(any(FundamentalData.class));
         verify(emailService, times(1)).send("Neue Quartalszahlen: Abcde (ABC.DE)",
-                "Für Abcde wurden am " + yesterday + " neue Quartalszahlen veröffentlicht! \n[http://foo, https://bar]");
+                "Für Abcde wurden am " + yesterday + " neue Quartalszahlen veröffentlicht! \nhttp://foo\nhttps://bar\n");
     }
 
     @Test
@@ -87,11 +88,13 @@ public class QuarterlyFiguresCheckerTest {
         verify(fundamentalDataRepository, times(1)).save(any(FundamentalData.class));
         verify(emailService, times(1)).send("Quartalszahlen Datum prüfen: Abcde (ABC.DE)",
                 "Für Abcde wurden die letzten Quartalszahlen vor mehr als 3 Montaten veröffentlicht (" +
-                 fourMonthAgo + ") \n[http://foo, https://bar]");
+                 fourMonthAgo + ") \nhttp://foo\nhttps://bar\n");
     }
 
     private List<FundamentalData> createDummyData(Date lastQuarterlyFigures, Date nextQuarterlyFigures) {
-        List<String> urls = new ArrayList<>(Arrays.asList("http://foo", "https://bar"));
+        List<FundamentalDataUrl> urls = new ArrayList<>(Arrays.asList(
+                new FundamentalDataUrl("http://foo"),
+                new FundamentalDataUrl("https://bar")));
 
         List<FundamentalData> fdList = new ArrayList<>();
         FundamentalData fd = new FundamentalData();
