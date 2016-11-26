@@ -42,7 +42,7 @@ public class FundamentalData {
     private double earningsRevision;
     private double analystEstimation;
     private String name;
-    private List<String> urls = new ArrayList<>();
+    private List<FundamentalDataUrl> urls = new ArrayList<>();
 
     private int overallRating;
     private int roeRating;
@@ -466,11 +466,11 @@ public class FundamentalData {
         this.name = name;
     }
 
-    public List<String> getUrls() {
+    public List<FundamentalDataUrl> getUrls() {
         return urls;
     }
 
-    public void setUrls(List<String> urls) {
+    public void setUrls(List<FundamentalDataUrl> urls) {
         this.urls = urls;
     }
 
