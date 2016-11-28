@@ -44,8 +44,6 @@ public class OnVistaParser {
         String symbol = fd.getSymbol();
         fundamentalData = fd;
 
-        log.info(html);
-
         fundamentalData.setSymbol(symbol);
         fundamentalData.setDate(new Date());
 
