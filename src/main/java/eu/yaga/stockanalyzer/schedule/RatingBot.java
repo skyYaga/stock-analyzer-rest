@@ -60,20 +60,29 @@ class RatingBot {
                 ratingRequired = true;
             }
 
-            if (ratingRequired) {
+            if (ratingRequired && stock.isAutomaticRating()) {
                 cnt++;
                 log.info("Rating " + stock.getName());
                 final int oldRating = stock.getOverallRating();
 
-                FundamentalData fundamentalData = restTemplate.getForObject(API_URL + "fundamental-data/" + stock.getSymbol() + "/refresh", FundamentalData.class);
-                final int newRating = fundamentalData.getOverallRating();
+                try {
+                    FundamentalData fundamentalData = restTemplate.getForObject(API_URL + "fundamental-data/" + stock.getSymbol() + "/refresh", FundamentalData.class);
+                    final int newRating = fundamentalData.getOverallRating();
 
-                log.info(stock.getName() + " - old rating: " + oldRating + " new rating: " + newRating);
+                    log.info(stock.getName() + " - old rating: " + oldRating + " new rating: " + newRating);
 
-                if (oldRating != newRating) {
-                    log.info("Sending email...");
-                    emailService.send("Neues Rating: " + stock.getName() + " (" + stock.getSymbol() +")",
-                            "Für " + stock.getName() + " gibt es ein neues Rating: " + newRating + " (" + oldRating + ")");
+                    if (oldRating != newRating) {
+                        log.info("Sending email...");
+                        emailService.send("Neues Rating: " + stock.getName() + " (" + stock.getSymbol() +")",
+                                "Für " + stock.getName() + " gibt es ein neues Rating: " + newRating + " (" + oldRating + ")");
+                    }
+                } catch (Exception e) {
+                    log.error(e.getLocalizedMessage());
+                    log.info("Disabling automatic rating for " + stock.getSymbol());
+                    stock.setAutomaticRating(false);
+                    fundamentalDataRepository.save(stock);
+                    emailService.send("Automatische Ratings deaktiviert: " + stock.getName() + " (" + stock.getSymbol() +")",
+                            "Für " + stock.getName() + " wurden aufgrund eines Fehlers die automatischen Ratings deaktiviert");
                 }
             }
         }

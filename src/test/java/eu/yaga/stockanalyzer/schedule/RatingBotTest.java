@@ -116,6 +116,45 @@ public class RatingBotTest {
         verify(emailService, times(0)).send(anyString(), anyString());
     }
 
+    @Test
+    public void testRatingDisabled() {
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -8);
+        Date old = cal.getTime();
+
+        List<FundamentalData> fdList = createDummyData(old, old, 1);
+        fdList.get(0).setAutomaticRating(false);
+
+        initMocks(this);
+        doReturn(fdList).when(fundamentalDataRepository).findAll();
+
+        ratingBot.rateStocks();
+
+        verify(fundamentalDataRepository, times(1)).findAll();
+        verify(restTemplate, times(0)).getForObject(anyString(), eq(FundamentalData.class));
+        verify(emailService, times(0)).send(anyString(), anyString());
+    }
+
+    @Test
+    public void testExceptionDisableRating() {
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -8);
+        Date old = cal.getTime();
+
+        List<FundamentalData> fdList = createDummyData(old, old, 1);
+
+        initMocks(this);
+        doReturn(fdList).when(fundamentalDataRepository).findAll();
+        doThrow(new NullPointerException()).when(restTemplate).getForObject("http://localhost:8081/api/fundamental-data/" + fdList.get(0).getSymbol() + "/refresh", FundamentalData.class);
+
+        ratingBot.rateStocks();
+
+        verify(fundamentalDataRepository, times(1)).findAll();
+        verify(fundamentalDataRepository, times(1)).save(any(FundamentalData.class));
+        verify(emailService, times(1)).send("Automatische Ratings deaktiviert: Abcde (ABC.DE)",
+                "Für Abcde wurden aufgrund eines Fehlers die automatischen Ratings deaktiviert");
+    }
+
     private List<FundamentalData> createDummyData(Date lastQuarterlyFigures, Date lastRating, int rating) {
         List<FundamentalData> fdList = new ArrayList<>();
         FundamentalData fd = new FundamentalData();

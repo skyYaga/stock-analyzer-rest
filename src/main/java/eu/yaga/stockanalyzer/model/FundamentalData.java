@@ -43,6 +43,7 @@ public class FundamentalData {
     private double analystEstimation;
     private String name;
     private List<FundamentalDataUrl> urls = new ArrayList<>();
+    private boolean automaticRating = true;
 
     private int overallRating;
     private int roeRating;
@@ -488,6 +489,14 @@ public class FundamentalData {
 
     public void setMarketCapitalization(double marketCapitalization) {
         this.marketCapitalization = marketCapitalization;
+    }
+
+    public boolean isAutomaticRating() {
+        return automaticRating;
+    }
+
+    public void setAutomaticRating(boolean automaticRating) {
+        this.automaticRating = automaticRating;
     }
 
     @Override
