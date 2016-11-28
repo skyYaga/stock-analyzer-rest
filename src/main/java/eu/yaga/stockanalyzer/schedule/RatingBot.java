@@ -33,7 +33,7 @@ class RatingBot {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Scheduled(cron = "0 0 8 * * *")
+    @Scheduled(cron = "0 0/10 8-20 * * *")
     void rateStocks() {
         log.info("Looking for stocks to rate...");
 
@@ -43,7 +43,14 @@ class RatingBot {
 
         List<FundamentalData> stocks = fundamentalDataRepository.findAll();
 
+        int cnt = 0;
+
         for (FundamentalData stock : stocks) {
+            if (cnt >= 5) {
+                // request limiting
+                break;
+            }
+
             boolean ratingRequired = false;
             if (stock.getDate().before(oneWeekAgo)) {
                 ratingRequired = true;
@@ -54,6 +61,7 @@ class RatingBot {
             }
 
             if (ratingRequired) {
+                cnt++;
                 log.info("Rating " + stock.getName());
                 final int oldRating = stock.getOverallRating();
 
