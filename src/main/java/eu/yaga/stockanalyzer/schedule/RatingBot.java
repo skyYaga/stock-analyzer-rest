@@ -51,6 +51,10 @@ class RatingBot {
                 break;
             }
 
+            if (stock.getDate() == null) {
+                continue;
+            }
+
             boolean ratingRequired = false;
             if (stock.getDate().before(oneWeekAgo)) {
                 ratingRequired = true;
