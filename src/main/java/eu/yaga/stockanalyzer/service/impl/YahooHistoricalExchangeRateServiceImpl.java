@@ -54,6 +54,7 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
      */
     @Override
     public List<HistoricalDataQuote> getHistoricalExchangeRates(String symbol, String dateStringFrom, String dateStringTo) throws ParseException {
+        log.info("Getting HistoricalExchangeRates for: " + symbol + " " + dateStringFrom + " " + dateStringTo);
         Calendar calendar = GregorianCalendar.getInstance();
 
         // Create default values
@@ -120,7 +121,10 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
 
             List<HistoricalDataQuote> ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
             LocalDate dateTmp = date;
-            while (ratesSymbol.size() < 2) {
+
+            int cnt = 0;
+            while (ratesSymbol.size() < 2 && cnt <= 10) {
+                cnt++;
                 dateTmp = dateTmp.minusDays(1);
                 priorDay = dateTmp.format(dtf);
                 ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
@@ -260,7 +264,9 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
                 LocalDate baseDateMinus = baseDate.minusDays(1);
 
                 List<HistoricalDataQuote> ratesToday = getHistoricalExchangeRates(symbol, baseDateMinus.format(dtf), baseDate.format(dtf));
-                while (ratesToday.size() < 1) {
+                int cnt = 0;
+                while (ratesToday.size() < 1 && cnt <= 10) {
+                    cnt++;
                     baseDateMinus = baseDateMinus.minusDays(1);
                     ratesToday = getHistoricalExchangeRates(symbol, baseDateMinus.format(dtf), baseDate.format(dtf));
                 }
@@ -269,7 +275,9 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
                 LocalDate compareDateMinus = compareDate.minusDays(1);
 
                 List<HistoricalDataQuote> ratesCompareDate = getHistoricalExchangeRates(symbol, compareDateMinus.format(dtf), compareDate.format(dtf));
-                while (ratesCompareDate.size() < 1) {
+                cnt = 0;
+                while (ratesCompareDate.size() < 1 && cnt <= 10) {
+                    cnt++;
                     compareDateMinus = compareDateMinus.minusDays(1);
                     ratesCompareDate = getHistoricalExchangeRates(symbol, compareDateMinus.format(dtf), compareDate.format(dtf));
                 }
