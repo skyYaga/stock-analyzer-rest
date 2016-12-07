@@ -16,10 +16,10 @@ public class YahooCurrentStockQuotesServiceImpl implements CurrentStockQuotesSer
 
     private static final Logger log = LoggerFactory.getLogger(YahooCurrentStockQuotesServiceImpl.class);
 
-    static final String YQL_BASE_URL = "https://query.yahooapis.com/v1/public/yql";
-    static final String YQL_QUERY_POSTFIX = "&format=json&env=store://datatables.org/alltableswithkeys";
-    static final String YQL_QUERY_QUOTE = "?q=select * from yahoo.finance.quotes where symbol = '%s'";
-    static final String YQL_QUERY_EXCHANGE = "?q=select * from yahoo.finance.xchange where pair = '%sEUR'";
+    private static final String YQL_BASE_URL = "https://query.yahooapis.com/v1/public/yql";
+    private static final String YQL_QUERY_POSTFIX = "&format=json&env=store://datatables.org/alltableswithkeys";
+    private static final String YQL_QUERY_QUOTE = "?q=select * from yahoo.finance.quotes where symbol = '%s'";
+    private static final String YQL_QUERY_EXCHANGE = "?q=select * from yahoo.finance.xchange where pair = '%sEUR'";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -34,6 +34,7 @@ public class YahooCurrentStockQuotesServiceImpl implements CurrentStockQuotesSer
     public double getCurrentRate(String symbol) {
         String queryString = String.format(YQL_QUERY_QUOTE, symbol);
 
+        log.info("Querying " + YQL_BASE_URL + queryString + YQL_QUERY_POSTFIX);
         YqlQuotesQuery queryResult = restTemplate.getForObject(YQL_BASE_URL + queryString + YQL_QUERY_POSTFIX, YqlQuotesQuery.class);
         log.info(queryResult.toString());
 
@@ -45,6 +46,7 @@ public class YahooCurrentStockQuotesServiceImpl implements CurrentStockQuotesSer
 
         if (!currency.equals("EUR")) {
             String xchangeQueryString = String.format(YQL_QUERY_EXCHANGE, currency);
+            log.info("Querying exchange " + YQL_BASE_URL + xchangeQueryString + YQL_QUERY_POSTFIX);
             YqlXchangeQuery xchangeQueryResult = restTemplate.getForObject(YQL_BASE_URL + xchangeQueryString + YQL_QUERY_POSTFIX, YqlXchangeQuery.class);
             log.info(xchangeQueryResult.toString());
 

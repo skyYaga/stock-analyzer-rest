@@ -3,10 +3,13 @@ package eu.yaga.stockanalyzer.config;
 import eu.yaga.stockanalyzer.parser.OnVistaParser;
 import eu.yaga.stockanalyzer.service.*;
 import eu.yaga.stockanalyzer.service.impl.*;
+import eu.yaga.stockanalyzer.util.XUserAgentInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Collections;
 
 /**
  * Spring Application Config
@@ -52,7 +55,9 @@ public class ApplicationConfig {
 
     @Bean
     public RestTemplate getRestTemplate() {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setInterceptors(Collections.singletonList(new XUserAgentInterceptor()));
+        return restTemplate;
     }
 
     @Bean
