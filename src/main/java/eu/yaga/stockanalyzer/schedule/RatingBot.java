@@ -1,6 +1,7 @@
 package eu.yaga.stockanalyzer.schedule;
 
 import eu.yaga.stockanalyzer.model.FundamentalData;
+import eu.yaga.stockanalyzer.model.StockType;
 import eu.yaga.stockanalyzer.repository.FundamentalDataRepository;
 import eu.yaga.stockanalyzer.service.EmailService;
 import org.slf4j.Logger;
@@ -73,22 +74,44 @@ class RatingBot {
                     FundamentalData fundamentalData = restTemplate.getForObject(API_URL + "fundamental-data/" + stock.getSymbol() + "/refresh", FundamentalData.class);
                     final int newRating = fundamentalData.getOverallRating();
 
-                    log.info(stock.getName() + " - old rating: " + oldRating + " new rating: " + newRating);
+                    log.info(stock.getName() + " (" + stock.getStockType() + ")" + " - old rating: " + oldRating + " new rating: " + newRating);
 
-                    if (oldRating != newRating) {
-                        log.info("Sending email...");
-                        emailService.send("Neues Rating: " + stock.getName() + " (" + stock.getSymbol() +")",
-                                "Für " + stock.getName() + " gibt es ein neues Rating: " + newRating + " (" + oldRating + ")");
+                    StockType stockType = stock.getStockType();
+
+                    if (stockType == StockType.SMALL_CAP || stockType == StockType.MID_CAP) {
+                        if (oldRating < 7 && newRating >= 7) {
+                            sendNewRatingMail(stock, newRating, oldRating);
+                        }
+                        if (oldRating > 4 && newRating <= 4) {
+                            sendNewRatingMail(stock, newRating, oldRating);
+                        }
+                    } else {
+                        if (oldRating < 4 && newRating >= 4) {
+                            sendNewRatingMail(stock, newRating, oldRating);
+                        }
+                        if (oldRating > 2 && newRating <= 2) {
+                            sendNewRatingMail(stock, newRating, oldRating);
+                        }
                     }
                 } catch (Exception e) {
                     log.error(e.getLocalizedMessage());
                     log.info("Disabling automatic rating for " + stock.getSymbol());
                     stock.setAutomaticRating(false);
                     fundamentalDataRepository.save(stock);
-                    emailService.send("Automatische Ratings deaktiviert: " + stock.getName() + " (" + stock.getSymbol() +")",
-                            "Für " + stock.getName() + " wurden aufgrund eines Fehlers die automatischen Ratings deaktiviert");
+                    sendRatingsDisabledMail(stock);
                 }
             }
         }
+    }
+
+    private void sendNewRatingMail(FundamentalData stock, int newRating, int oldRating) {
+        log.info("Sending email...");
+        emailService.send("Neues Rating: " + stock.getName() + " (" + stock.getSymbol() +")",
+                "Für " + stock.getName() + " gibt es ein neues Rating: " + newRating + " (" + oldRating + ")");
+    }
+
+    private void sendRatingsDisabledMail(FundamentalData stock) {
+        emailService.send("Automatische Ratings deaktiviert: " + stock.getName() + " (" + stock.getSymbol() +")",
+                "Für " + stock.getName() + " wurden aufgrund eines Fehlers die automatischen Ratings deaktiviert");
     }
 }
