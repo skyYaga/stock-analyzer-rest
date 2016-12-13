@@ -36,8 +36,8 @@ public class RatingBotTest {
         cal.add(Calendar.DAY_OF_MONTH, -8);
         Date old = cal.getTime();
 
-        List<FundamentalData> fdList = createDummyData(old, old, 0);
-        List<FundamentalData> fdListAfter = createDummyData(old, new Date(), 1);
+        List<FundamentalData> fdList = createDummyData(old, old, 3);
+        List<FundamentalData> fdListAfter = createDummyData(old, new Date(), 2);
         FundamentalData fdAfter = fdListAfter.get(0);
 
         initMocks(this);
@@ -49,7 +49,7 @@ public class RatingBotTest {
         verify(fundamentalDataRepository, times(1)).findAll();
         verify(restTemplate, times(1)).getForObject("http://localhost:8081/api/fundamental-data/" + fdAfter.getSymbol() + "/refresh", FundamentalData.class);
         verify(emailService, times(1)).send("Neues Rating: Abcde (ABC.DE)",
-                "Für Abcde gibt es ein neues Rating: 1 (0)");
+                "Für Abcde gibt es ein neues Rating: 2 (3)");
     }
 
     @Test
@@ -80,8 +80,8 @@ public class RatingBotTest {
         cal.add(Calendar.DAY_OF_MONTH, -3);
         Date lastRating = cal.getTime();
 
-        List<FundamentalData> fdList = createDummyData(lastQuarterly, lastRating, 0);
-        List<FundamentalData> fdListAfter = createDummyData(lastQuarterly, new Date(), 1);
+        List<FundamentalData> fdList = createDummyData(lastQuarterly, lastRating, 3);
+        List<FundamentalData> fdListAfter = createDummyData(lastQuarterly, new Date(), 4);
         FundamentalData fdAfter = fdListAfter.get(0);
 
         initMocks(this);
@@ -93,7 +93,7 @@ public class RatingBotTest {
         verify(fundamentalDataRepository, times(1)).findAll();
         verify(restTemplate, times(1)).getForObject("http://localhost:8081/api/fundamental-data/" + fdAfter.getSymbol() + "/refresh", FundamentalData.class);
         verify(emailService, times(1)).send("Neues Rating: Abcde (ABC.DE)",
-                "Für Abcde gibt es ein neues Rating: 1 (0)");
+                "Für Abcde gibt es ein neues Rating: 4 (3)");
     }
 
     @Test
