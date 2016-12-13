@@ -41,6 +41,7 @@ public class FundamentalData {
     private double profitGrowth;
     private double earningsRevision;
     private double analystEstimation;
+    private int analystEstimationCount;
     private String name;
     private List<FundamentalDataUrl> urls = new ArrayList<>();
     private boolean automaticRating = true;
@@ -329,6 +330,14 @@ public class FundamentalData {
 
     public void setAnalystEstimation(double analystEstimation) {
         this.analystEstimation = analystEstimation;
+    }
+
+    public int getAnalystEstimationCount() {
+        return analystEstimationCount;
+    }
+
+    public void setAnalystEstimationCount(int analystEstimationCount) {
+        this.analystEstimationCount = analystEstimationCount;
     }
 
     public int getAnalystEstimationRating() {

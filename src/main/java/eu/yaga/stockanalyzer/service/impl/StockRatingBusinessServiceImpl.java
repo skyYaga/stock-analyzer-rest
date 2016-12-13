@@ -175,13 +175,24 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
 
     private FundamentalData rateAnalystEstimation(FundamentalData fd) {
         double analystEstimation = fd.getAnalystEstimation();
-
-        if (analystEstimation >= 2.5) {
-            fd.setAnalystEstimationRating(1);
-        } else if (analystEstimation <= 1.5) {
-            fd.setAnalystEstimationRating(-1);
+        StockType stockType = fd.getStockType();
+        int analystEstimationCount = fd.getAnalystEstimationCount();
+        if (stockType == StockType.SMALL_CAP && analystEstimationCount > 0 && analystEstimationCount < 5) {
+            if (analystEstimation >= 2.5) {
+                fd.setAnalystEstimationRating(-1);
+            } else if (analystEstimation <= 1.5) {
+                fd.setAnalystEstimationRating(1);
+            } else {
+                fd.setAnalystEstimationRating(0);
+            }
         } else {
-            fd.setAnalystEstimationRating(0);
+            if (analystEstimation >= 2.5) {
+                fd.setAnalystEstimationRating(1);
+            } else if (analystEstimation <= 1.5) {
+                fd.setAnalystEstimationRating(-1);
+            } else {
+                fd.setAnalystEstimationRating(0);
+            }
         }
 
         return fd;

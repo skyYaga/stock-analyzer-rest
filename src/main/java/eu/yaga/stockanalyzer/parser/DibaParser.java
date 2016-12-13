@@ -46,7 +46,10 @@ public class DibaParser {
         }
 
         if (foundCount == 3) {
-            double dibaRating = (buy + hold * 2 + sell * 3) / (buy + hold + sell);
+            int totalCount = (int) (buy + hold + sell);
+            double dibaRating = (buy + hold * 2 + sell * 3) / totalCount;
+
+            fd.setAnalystEstimationCount(totalCount);
             fd.setAnalystEstimation(dibaRating);
         }
 

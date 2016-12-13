@@ -175,4 +175,24 @@ public class StockRatingBusinessServiceImplTest {
 
         Assert.assertEquals("RateMomentumRating", -1, fd.getRateMomentumRating());
     }
+
+    @Test
+    public void testSmallCapAnalystRating() {
+        HistoricalExchangeRateService mockedRateService = mock(HistoricalExchangeRateService.class);
+        service = new StockRatingBusinessServiceImpl(mockedRateService);
+
+        fd.setStockType(StockType.SMALL_CAP);
+        fd.setAnalystEstimation(1.1);
+        fd = service.rate(fd);
+        Assert.assertEquals("AnalystRating small cap few estimations", -1, fd.getAnalystEstimationRating());
+
+
+        fd.setAnalystEstimationCount(3);
+        fd = service.rate(fd);
+        Assert.assertEquals("AnalystRating small cap few estimations", 1, fd.getAnalystEstimationRating());
+
+        fd.setAnalystEstimationCount(6);
+        fd = service.rate(fd);
+        Assert.assertEquals("AnalystRating small cap many estimations", -1, fd.getAnalystEstimationRating());
+    }
 }

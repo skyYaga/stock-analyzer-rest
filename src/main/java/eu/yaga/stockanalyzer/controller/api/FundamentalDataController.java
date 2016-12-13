@@ -125,6 +125,7 @@ class FundamentalDataController {
             fundamentalData.setMarketCapitalization(newFundamentalData.getMarketCapitalization());
             fundamentalData.setEarningsRevision(newFundamentalData.getEarningsRevision());
             fundamentalData.setAnalystEstimation(newFundamentalData.getAnalystEstimation());
+            fundamentalData.setAnalystEstimationCount(newFundamentalData.getAnalystEstimationCount());
         } else {
             fundamentalData = newFundamentalData;
         }
