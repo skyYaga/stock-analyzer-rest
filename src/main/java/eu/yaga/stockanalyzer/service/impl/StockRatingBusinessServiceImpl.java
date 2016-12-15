@@ -4,6 +4,8 @@ import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.model.StockType;
 import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
 import eu.yaga.stockanalyzer.service.StockRatingBusinessService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.List;
  * Implementation of StockRatingBusinessService
  */
 public class StockRatingBusinessServiceImpl implements StockRatingBusinessService {
+
+    private static final Logger log = LoggerFactory.getLogger(StockRatingBusinessServiceImpl.class);
 
     private HistoricalExchangeRateService historicalExchangeRateService;
 
@@ -48,6 +52,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateEarningsRevision(FundamentalData fd) {
+        log.info("Rating earnings revision...");
         double earningsRevision = fd.getEarningsRevision();
 
         if (earningsRevision > 5) {
@@ -62,6 +67,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateProfitGrowth(FundamentalData fd) {
+        log.info("Rating profit growth...");
         double epsCurrentYear = fd.getEpsCurrentYear();
         double epsNextYear = fd.getEpsNextYear();
 
@@ -80,6 +86,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateReversal3Month(FundamentalData fd) {
+        log.info("Rating 3 month reversal...");
         StockType stockType = fd.getStockType();
 
         if (stockType.equals(StockType.MID_CAP) || stockType.equals(StockType.SMALL_CAP)) {
@@ -115,6 +122,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateRateMomentum(FundamentalData fd) {
+        log.info("Rating rate momentum...");
         int rateProgress6monthRating = fd.getRateProgress6monthRating();
         int rateProgress1yearRating = fd.getRateProgress1yearRating();
 
@@ -130,6 +138,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateRateProgress1year(FundamentalData fd) {
+        log.info("Rating rate progress 1 year...");
         double rateProgress1year = historicalExchangeRateService.getRateProgress1year(fd);
         fd.setRateProgress1year(rateProgress1year);
 
@@ -145,6 +154,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateRateProgress6month(FundamentalData fd) {
+        log.info("Rating rate progress 6 month...");
         double rateProgress6month = historicalExchangeRateService.getRateProgress6month(fd);
         fd.setRateProgress6month(rateProgress6month);
 
@@ -160,6 +170,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateQuarterlyFigures(FundamentalData fd) {
+        log.info("Rating quarterly figures...");
         double reactionToQuarterlyFigures = historicalExchangeRateService.getReactionToQuarterlyFigures(fd);
 
         if (reactionToQuarterlyFigures >= 1) {
@@ -174,6 +185,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateAnalystEstimation(FundamentalData fd) {
+        log.info("Rating analyst estimation...");
         double analystEstimation = fd.getAnalystEstimation();
         StockType stockType = fd.getStockType();
         int analystEstimationCount = fd.getAnalystEstimationCount();
@@ -199,6 +211,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateOverall(FundamentalData fd) {
+        log.info("Creating overall rating...");
         int overallRating = fd.getRoeRating()
                 + fd.getEbitRating()
                 + fd.getEquityRatioRating()
@@ -218,6 +231,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData ratePerCurrent(FundamentalData fd) {
+        log.info("Rating current per...");
         double perCurrent = fd.getPerCurrent();
 
         if (perCurrent < 12) {
@@ -232,6 +246,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData ratePer5years(FundamentalData fd) {
+        log.info("Rating per 5 years...");
         double per5years = fd.getPer5years();
 
         if (per5years < 12) {
@@ -246,6 +261,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateEquityRatio(FundamentalData fd) {
+        log.info("Rating equity ratio...");
         double equityRatio = fd.getEquityRatio();
 
         if (fd.getStockType() == StockType.LARGE_FINANCE) {
@@ -270,6 +286,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateEbit(FundamentalData fd) {
+        log.info("Rating ebit...");
         if (fd.getStockType() == StockType.LARGE_FINANCE) {
             fd.setEbitRating(0);
         } else {
@@ -288,6 +305,7 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     }
 
     private FundamentalData rateRoe(FundamentalData fd) {
+        log.info("Rating roe...");
         double roe = fd.getRoe();
 
         if (roe > 20) {
