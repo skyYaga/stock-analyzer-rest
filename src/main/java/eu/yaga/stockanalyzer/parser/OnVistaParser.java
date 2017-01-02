@@ -86,8 +86,20 @@ public class OnVistaParser {
         fundamentalData.setAsk(currentRate);
 
         // Gewinn pro Aktie
-        fundamentalData.setEpsNextYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
-        fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+        if (!isOnvistaNumber(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", "."))) {
+            log.warn("the next years eps is not a number. Trying current and last year...");
+            fundamentalData.setEpsNextYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+            if (earningsPerShare.get(fundamentalData.getLastYear()) != null) {
+                fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getLastYear()).replace(",", ".")));
+            } else {
+                log.warn("last year " + fundamentalData.getLastYear() + " not found in earningsPerShare. Trying to append 'e'");
+                fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getLastYear() + "e").replace(",", ".")));
+            }
+        } else {
+            fundamentalData.setEpsNextYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
+            fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
+        }
+
 
         // 5 Jahre
         fundamentalData.setPer5years(calculatePer5years(currentRate, earningsPerShare));
@@ -102,6 +114,11 @@ public class OnVistaParser {
             return Double.parseDouble(numberString);
         }
         return 0;
+    }
+
+
+    private boolean isOnvistaNumber(String numberString) {
+        return NumberUtils.isCreatable(numberString.replace("%", "").replace(",", "."));
     }
 
 
@@ -344,14 +361,14 @@ public class OnVistaParser {
             roeMap.put(profitabilityYears.get(i), roeArray.get(i));
         }
 
-        log.info(roeMap.get("roe last year: " + fundamentalData.getLastYear()));
+        log.info("roe last year: " + roeMap.get(fundamentalData.getLastYear()));
 
         String roe = roeMap.get(fundamentalData.getLastYear());
-        if (roe == null) {
+        if (roe == null || !isOnvistaNumber(roe)) {
             log.info("Trying " + fundamentalData.getLastYear() + "e as last year...");
             roe = roeMap.get(fundamentalData.getLastYear() + "e");
-            if (roe == null) {
-                log.info(roeMap.get("roe two years ago: " + fundamentalData.getLastYear()));
+            if (roe == null || !isOnvistaNumber(roe)) {
+                log.info("roe two years ago: " + roeMap.get(fundamentalData.getTwoYearsAgo()));
                 roe = roeMap.get(fundamentalData.getTwoYearsAgo());
             }
         }
@@ -392,14 +409,14 @@ public class OnVistaParser {
             mcMap.put(profitabilityYears.get(i), mcArray.get(i));
         }
 
-        log.info(mcMap.get("mc last year: " + fundamentalData.getLastYear()));
+        log.info("market capitalization last year: " + mcMap.get(fundamentalData.getLastYear()));
 
         String mc = mcMap.get(fundamentalData.getLastYear());
-        if (mc == null) {
+        if (mc == null || !isOnvistaNumber(mc)) {
             log.info("Trying " + fundamentalData.getLastYear() + "e as last year...");
             mc = mcMap.get(fundamentalData.getLastYear() + "e");
-            if (mc == null) {
-                log.info(mcMap.get("mc two years ago: " + fundamentalData.getLastYear()));
+            if (mc == null || !isOnvistaNumber(mc)) {
+                log.info("market capitalization two years ago: " + mcMap.get(fundamentalData.getTwoYearsAgo()));
                 mc = mcMap.get(fundamentalData.getTwoYearsAgo());
             }
         }
@@ -452,14 +469,14 @@ public class OnVistaParser {
                 ebitMap.put(profitabilityYears.get(i), ebitArray.get(i));
             }
 
-            log.info(ebitMap.get("Ebit last year: " + fundamentalData.getLastYear()));
+            log.info("Ebit last year: " + ebitMap.get(fundamentalData.getLastYear()));
 
             String ebit = ebitMap.get(fundamentalData.getLastYear());
-            if (ebit == null) {
+            if (ebit == null || !isOnvistaNumber(ebit)) {
                 log.info("Trying " + fundamentalData.getLastYear() + "e as last year...");
                 ebit = ebitMap.get(fundamentalData.getLastYear() + "e");
-                if (ebit == null) {
-                    log.info(ebitMap.get("Ebit two years ago: " + fundamentalData.getTwoYearsAgo()));
+                if (ebit == null || !isOnvistaNumber(ebit)) {
+                    log.info("Ebit two years ago: " + ebitMap.get(fundamentalData.getTwoYearsAgo()));
                     ebit = ebitMap.get(fundamentalData.getTwoYearsAgo());
                 }
             }
@@ -505,11 +522,11 @@ public class OnVistaParser {
         log.info("equity ratio last year: " + equityRatioMap.get(fundamentalData.getLastYear()));
 
         String equityRatio = equityRatioMap.get(fundamentalData.getLastYear());
-        if (equityRatio == null) {
+        if (equityRatio == null || !isOnvistaNumber(equityRatio)) {
             log.info("Trying " + fundamentalData.getLastYear() + "e as last year...");
             equityRatio = equityRatioMap.get(fundamentalData.getLastYear() + "e");
-            if (equityRatio == null) {
-                log.info("equity ratio two years ago: " + equityRatioMap.get(fundamentalData.getLastYear()));
+            if (equityRatio == null || !isOnvistaNumber(equityRatio)) {
+                log.info("equity ratio two years ago: " + equityRatioMap.get(fundamentalData.getTwoYearsAgo()));
                 equityRatio = equityRatioMap.get(fundamentalData.getTwoYearsAgo());
             }
         }
