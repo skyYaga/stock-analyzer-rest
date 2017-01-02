@@ -149,4 +149,20 @@ class FundamentalDataController {
         Long deleteCount = fundamentalDataRepository.deleteBySymbol(symbol);
         log.info("Deleted " + deleteCount + " entries.");
     }
+
+    /**
+     * This Controller enables automatic ratings for fundamental data<br/>
+     *
+     * @param symbol the stocks symbol
+     * @return the fundamental data
+     */
+    @RequestMapping(value = "/{symbol}/enableratings", method = RequestMethod.GET)
+    public FundamentalData enableAutomaticRatings(@PathVariable String symbol) {
+        FundamentalData fundamentalData = fundamentalDataRepository.findBySymbolOrderByDateDesc(symbol);
+        log.info("Got Fundamental Data: " + fundamentalData);
+
+        fundamentalData.setAutomaticRating(true);
+
+        return fundamentalDataRepository.save(fundamentalData);
+    }
 }
