@@ -19,6 +19,11 @@ public class FundamentalDataUrl {
         this.type = FundamentalDataUrlType.OTHER;
     }
 
+    public FundamentalDataUrl(String url, FundamentalDataUrlType type) {
+        this.url = url;
+        this.type = type;
+    }
+
     public FundamentalDataUrlType getType() {
         return type;
     }
