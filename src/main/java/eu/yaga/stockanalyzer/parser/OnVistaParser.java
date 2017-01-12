@@ -438,7 +438,8 @@ public class OnVistaParser {
      * @param profitabilityYears the available years
      */
     private double parseEbit(ArrayList<String> profitabilityYears) {
-        if (fundamentalData.getStockType() == StockType.LARGE_FINANCE) {
+        StockType stockType = fundamentalData.getStockType();
+        if (stockType == StockType.LARGE_FINANCE || stockType == StockType.MID_FINANCE || stockType == StockType.SMALL_FINANCE) {
             return 0;
         } else {
             Pattern ebitPattern = Pattern.compile("<tr>\\s*<td[^/]*EBIT-Marge</td>((?!</tr>).)*</tr>");

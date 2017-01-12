@@ -89,7 +89,8 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
         log.info("Rating 3 month reversal...");
         StockType stockType = fd.getStockType();
 
-        if (stockType.equals(StockType.MID_CAP) || stockType.equals(StockType.SMALL_CAP)) {
+        if (stockType.equals(StockType.MID_CAP) || stockType.equals(StockType.SMALL_CAP)
+                || stockType.equals(StockType.MID_FINANCE) || stockType.equals(StockType.SMALL_FINANCE)) {
             fd.setReversal3Month(new ArrayList<>(Arrays.asList(0.0, 0.0, 0.0)));
             fd.setReversal3MonthRating(0);
         } else {
@@ -189,7 +190,8 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
         double analystEstimation = fd.getAnalystEstimation();
         StockType stockType = fd.getStockType();
         int analystEstimationCount = fd.getAnalystEstimationCount();
-        if (stockType == StockType.SMALL_CAP && analystEstimationCount > 0 && analystEstimationCount < 5) {
+        if ((stockType == StockType.SMALL_CAP || stockType == StockType.SMALL_FINANCE)
+                && analystEstimationCount > 0 && analystEstimationCount < 5) {
             if (analystEstimation >= 2.5) {
                 fd.setAnalystEstimationRating(-1);
             } else if (analystEstimation <= 1.5) {
@@ -234,7 +236,9 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
         log.info("Rating current per...");
         double perCurrent = fd.getPerCurrent();
 
-        if (perCurrent < 12) {
+        if (perCurrent <= 0) {
+            fd.setPerCurrentRating(-1);
+        } else if (perCurrent < 12) {
             fd.setPerCurrentRating(1);
         } else if (perCurrent > 16) {
             fd.setPerCurrentRating(-1);
@@ -249,7 +253,9 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
         log.info("Rating per 5 years...");
         double per5years = fd.getPer5years();
 
-        if (per5years < 12) {
+        if (per5years <= 0) {
+            fd.setPer5yearsRating(-1);
+        } else if (per5years < 12) {
             fd.setPer5yearsRating(1);
         } else if (per5years > 16) {
             fd.setPer5yearsRating(-1);
@@ -263,8 +269,9 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
     private FundamentalData rateEquityRatio(FundamentalData fd) {
         log.info("Rating equity ratio...");
         double equityRatio = fd.getEquityRatio();
+        StockType stockType = fd.getStockType();
 
-        if (fd.getStockType() == StockType.LARGE_FINANCE) {
+        if (stockType == StockType.LARGE_FINANCE || stockType == StockType.MID_FINANCE || stockType == StockType.SMALL_FINANCE) {
             if (equityRatio > 10) {
                 fd.setEquityRatioRating(1);
             } else if (equityRatio < 5) {
@@ -287,7 +294,9 @@ public class StockRatingBusinessServiceImpl implements StockRatingBusinessServic
 
     private FundamentalData rateEbit(FundamentalData fd) {
         log.info("Rating ebit...");
-        if (fd.getStockType() == StockType.LARGE_FINANCE) {
+        StockType stockType = fd.getStockType();
+
+        if (stockType == StockType.LARGE_FINANCE || stockType == StockType.MID_FINANCE || stockType == StockType.SMALL_FINANCE) {
             fd.setEbitRating(0);
         } else {
             double ebit = fd.getEbit();

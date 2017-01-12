@@ -78,7 +78,8 @@ class RatingBot {
 
                     StockType stockType = stock.getStockType();
 
-                    if (stockType == StockType.SMALL_CAP || stockType == StockType.MID_CAP) {
+                    if (stockType == StockType.SMALL_CAP || stockType == StockType.MID_CAP
+                            || stockType == StockType.SMALL_FINANCE || stockType == StockType.MID_FINANCE) {
                         if (oldRating < 7 && newRating >= 7) {
                             sendNewRatingMail(stock, newRating, oldRating);
                         }

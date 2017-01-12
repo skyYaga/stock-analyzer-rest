@@ -195,4 +195,18 @@ public class StockRatingBusinessServiceImplTest {
         fd = service.rate(fd);
         Assert.assertEquals("AnalystRating small cap many estimations", -1, fd.getAnalystEstimationRating());
     }
+
+    @Test
+    public void testNegativePer() {
+        HistoricalExchangeRateService mockedRateService = mock(HistoricalExchangeRateService.class);
+        service = new StockRatingBusinessServiceImpl(mockedRateService);
+
+        fd.setPerCurrent(-1);
+        fd.setPer5years(0);
+
+        fd = service.rate(fd);
+
+        Assert.assertEquals("PER current rating", -1, fd.getPerCurrentRating());
+        Assert.assertEquals("PER 5 years rating", -1, fd.getPer5yearsRating());
+    }
 }
