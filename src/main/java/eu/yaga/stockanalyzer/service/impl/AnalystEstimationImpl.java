@@ -56,6 +56,9 @@ public class AnalystEstimationImpl implements AnalystEstimationService{
             }
         }
 
+        double analystEstimation = fundamentalData.getAnalystEstimation();
+        fundamentalData.setAnalystEstimation(Math.round(analystEstimation * 100d) / 100d);
+
         return fundamentalData;
     }
 }
