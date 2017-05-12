@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * A POJO for fundamental data
@@ -27,6 +25,7 @@ public class FundamentalData {
     private double ask;
     private double epsCurrentYear;
     private double epsNextYear;
+    private Map<String, EarningsPerShare> epsHistory = new TreeMap<>();
     private double perCurrent;
     private double per5years;
     private double marketCapitalization;
@@ -187,6 +186,15 @@ public class FundamentalData {
 
     public void setEpsNextYear(double epsNextYear) {
         this.epsNextYear = epsNextYear;
+    }
+
+
+    public Map<String, EarningsPerShare> getEpsHistory() {
+        return epsHistory;
+    }
+
+    public void setEpsHistory(Map<String, EarningsPerShare> epsHistory) {
+        this.epsHistory = epsHistory;
     }
 
     /**

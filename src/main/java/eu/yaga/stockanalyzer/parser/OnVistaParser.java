@@ -1,5 +1,6 @@
 package eu.yaga.stockanalyzer.parser;
 
+import eu.yaga.stockanalyzer.model.EarningsPerShare;
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.model.StockType;
 import eu.yaga.stockanalyzer.model.historicaldata.HistoricalDataQuote;
@@ -99,6 +100,12 @@ public class OnVistaParser {
             fundamentalData.setEpsNextYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getNextYear()).replace(",", ".")));
             fundamentalData.setEpsCurrentYear(parseToDoubleOrZero(earningsPerShare.get(fundamentalData.getCurrentYear()).replace(",", ".")));
         }
+
+        // Gewinn pro Aktie historisch
+        Map<String, EarningsPerShare> epsHistory = fundamentalData.getEpsHistory();
+        epsHistory.put(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE),
+                new EarningsPerShare(fundamentalData.getEpsCurrentYear(), fundamentalData.getEpsNextYear())
+        );
 
 
         // 5 Jahre
