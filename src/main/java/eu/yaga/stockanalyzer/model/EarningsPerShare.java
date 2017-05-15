@@ -9,6 +9,14 @@ public class EarningsPerShare {
     private double epsNextYear;
 
     /**
+     * Default constructor
+     */
+    public EarningsPerShare() {
+        epsCurrentYear = 0;
+        epsNextYear = 0;
+    }
+
+    /**
      * Creats an EPS instance with the given values
      * @param epsCurrentYear this years earnings per share
      * @param epsNextYear next years earnings per share
