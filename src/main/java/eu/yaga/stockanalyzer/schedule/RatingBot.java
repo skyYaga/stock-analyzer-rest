@@ -34,7 +34,7 @@ class RatingBot {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Scheduled(cron = "0 0/10 8-20 * * *")
+    @Scheduled(cron = "0 0/10 8-20 * * MON-FRI")
     void rateStocks() {
         log.info("Looking for stocks to rate...");
 

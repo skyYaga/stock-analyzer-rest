@@ -1,48 +1,60 @@
 package eu.yaga.stockanalyzer.service.impl;
 
+import com.jimmoores.quandl.DataSetRequest;
+import com.jimmoores.quandl.QuandlSession;
+import com.jimmoores.quandl.Row;
+import com.jimmoores.quandl.TabularResult;
+import com.jimmoores.quandl.util.QuandlRuntimeException;
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.model.RateProgressBean;
 import eu.yaga.stockanalyzer.model.StockIndex;
 import eu.yaga.stockanalyzer.model.historicaldata.HistoricalDataQuote;
-import eu.yaga.stockanalyzer.model.historicaldata.YqlHistoricalDataQuery;
 import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
 import eu.yaga.stockanalyzer.util.HttpHelper;
+import eu.yaga.stockanalyzer.util.QuandlCode;
+import eu.yaga.stockanalyzer.util.QuandlProperties;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.client.RestTemplate;
+import org.threeten.bp.DateTimeUtils;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.ZoneId;
+import org.threeten.bp.format.DateTimeFormatter;
+import org.threeten.bp.temporal.ChronoUnit;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Implementation of the {@link HistoricalExchangeRateService}
  */
-public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchangeRateService {
-
-    private static final Logger log = LoggerFactory.getLogger(YahooHistoricalExchangeRateServiceImpl.class);
-
-    static final String YQL_BASE_URL = "https://query.yahooapis.com/v1/public/yql";
-    static final String YQL_QUERY_POSTFIX = "&format=json&env=store://datatables.org/alltableswithkeys";
-    static final String YQL_QUERY_HISTORICAL_RATES =
-            "?q=select * from yahoo.finance.historicaldata where symbol = '%s' and startDate = '%s' and endDate = '%s'";
-
-
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private DateTimeFormatter dtfGermany = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchangeRateService {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private QuandlProperties quandlProperties;
+
+    private static final Logger log = LoggerFactory.getLogger(QuandlHistoricalExchangeRateServiceImpl.class);
+
+    // Quandl Frankfurt Stock Exchange / XETRA
+    private static final String FSE_PREFIX = "FSE/";
+    private static final String FSE_POSTFIX = "_X";
+    // Quandl Stuttgart Stock Exchange
+    private static final String SSE_PREFIX = "SSE/";
+    // Quandl US companies
+    private static final String US_PREFIX = "WIKI/";
+    // Quandl Google finance
+    private static final String GOOG_FRA_PREFIX = "GOOG/FRA_";
+    private static final String GOOG_NASDAQ_PREFIX = "GOOG/NASDAQ_";
+
+    private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private DateTimeFormatter dtfGermany = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     /**
      * This method returns historical exchange Rates of the given stock
@@ -55,47 +67,90 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
     @Override
     public List<HistoricalDataQuote> getHistoricalExchangeRates(String symbol, String dateStringFrom, String dateStringTo) throws ParseException {
         log.info("Getting HistoricalExchangeRates for: " + symbol + " " + dateStringFrom + " " + dateStringTo);
-        Calendar calendar = GregorianCalendar.getInstance();
-
-        // Create default values
-        Date dateTo = new Date();
-        if (dateStringTo != null) {
-            dateTo = sdf.parse(dateStringTo);
+        String[] splitSymbol = symbol.split("\\.");
+        String cleanSymbol = splitSymbol[0];
+        String exchange = "";
+        if (splitSymbol.length > 1) {
+            exchange = splitSymbol[1];
         }
 
-        calendar.setTime(dateTo);
-        calendar.add(Calendar.YEAR, -1);
-        Date dateFrom = calendar.getTime();
+        List<QuandlCode> quandlCodeList = buildQuandlCode(cleanSymbol, exchange);
 
+        log.info("Clean Symbol: " + cleanSymbol);
+
+        LocalDate dateTo = LocalDate.now();
+        if (dateStringTo != null) {
+            dateTo = LocalDate.parse(dateStringTo, DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+
+        LocalDate dateFrom = LocalDate.now().minusYears(1);
         if (dateStringFrom != null) {
-            dateFrom = sdf.parse(dateStringFrom);
+            dateFrom = LocalDate.parse(dateStringFrom, DateTimeFormatter.ISO_LOCAL_DATE);
         }
 
         if (dateFrom.equals(dateTo)) {
             throw new RuntimeException("The dates may not be equal!");
         }
-        if (dateFrom.after(dateTo)) {
+        if (dateFrom.isAfter(dateTo)) {
             throw new RuntimeException("The from date has to be before the to date!");
         }
 
-        String queryString = String.format(YQL_QUERY_HISTORICAL_RATES, symbol, sdf.format(dateFrom), sdf.format(dateTo));
+        List<HistoricalDataQuote> quoteList = new ArrayList<>();
+        QuandlSession session = QuandlSession.create(quandlProperties.getAuth().getToken());
+        for (QuandlCode quandlCode : quandlCodeList) {
+            log.info("Querying: " + quandlCode.getCode() + " from: " + dateFrom + " to: " + dateTo);
+            try {
+                TabularResult tabularResult = session.getDataSet(
+                        DataSetRequest.Builder
+                                .of(quandlCode.getCode())
+                                .withStartDate(dateFrom)
+                                .withEndDate(dateTo)
+                                .build());
 
-        YqlHistoricalDataQuery queryResult = new YqlHistoricalDataQuery();
-        try {
-            log.info("Querying: " + YQL_BASE_URL + queryString + YQL_QUERY_POSTFIX);
-            queryResult = restTemplate.getForObject(YQL_BASE_URL + queryString + YQL_QUERY_POSTFIX, YqlHistoricalDataQuery.class);
-        } catch (Exception e) {
-            log.error("YqlHistoricalDataQuery failed: " + e.getLocalizedMessage());
+                log.info(tabularResult.toPrettyPrintedString());
+
+                for (Row row : tabularResult) {
+                    String dateString = row.getString("Date");
+                    double close = row.getDouble("Close");
+                    quoteList.add(new HistoricalDataQuote(symbol, dateString, close));
+                }
+                break;
+            } catch (QuandlRuntimeException e) {
+                log.warn("Error requesting quandl code: " + quandlCode.getCode(), e);
+            }
         }
-        log.info(queryResult.toString());
 
-        if (queryResult.getQuery() != null
-                && queryResult.getQuery().getResults() != null
-                && queryResult.getQuery().getResults().getQuote() != null) {
-            return queryResult.getQuery().getResults().getQuote();
+        return quoteList;
+    }
+
+    /**
+     * Generates a list of quandlCodes to try
+     * @param cleanSymbol the stocks symbol
+     * @param exchange the symbol of the exchange
+     * @return a list of Strings with quandl codes
+     */
+    private List<QuandlCode> buildQuandlCode(String cleanSymbol, String exchange) {
+
+        List<QuandlCode> quandlCodeList = new ArrayList<>();
+
+        switch (exchange) {
+            case "F":
+            case "DE":
+                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR"));
+                quandlCodeList.add(new QuandlCode(FSE_PREFIX + cleanSymbol + FSE_POSTFIX, "EUR"));
+                quandlCodeList.add(new QuandlCode(SSE_PREFIX + cleanSymbol, "EUR"));
+                break;
+            case "US":
+                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD"));
+                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD"));
+                break;
+            default:
+                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD"));
+                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR"));
+                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD"));
         }
 
-        return new ArrayList<>();
+        return quandlCodeList;
     }
 
     /**
@@ -115,7 +170,7 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
                 return -9999;
             }
 
-            LocalDate date = dateLegacy.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            LocalDate date = DateTimeUtils.toInstant(dateLegacy).atZone(ZoneId.systemDefault()).toLocalDate();
 
             String dateString = date.format(dtf);
             String priorDay = date.minusDays(1).format(dtf);
@@ -131,10 +186,10 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
                 ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
             }
 
-            List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
-            if (ratesIndex.size() == 0) {
-                ratesIndex = getRatesIndexFromBackupProvider(fundamentalData.getStockIndex(), ratesSymbol);
-            }
+            //List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
+            //if (ratesIndex.size() == 0) {
+            List<HistoricalDataQuote> ratesIndex = getRatesIndexFromBackupProvider(fundamentalData.getStockIndex(), ratesSymbol);
+            //}
 
             // calculate Data
             double closeSymbol = ratesSymbol.get(0).getClose();
@@ -307,35 +362,24 @@ public class YahooHistoricalExchangeRateServiceImpl implements HistoricalExchang
      * @return the rate progress
      */
     private double getIndexRateProgress(StockIndex index, String baseDateString, String compareDateString) {
-        try {
-            if (index != null && baseDateString != null && compareDateString != null) {
-                LocalDate baseDate = LocalDate.parse(baseDateString, dtf);
-                LocalDate baseDateMinus = baseDate.minusDays(1);
-                LocalDate compareDate = LocalDate.parse(compareDateString, dtf);
-                LocalDate compareDateMinus = compareDate.minusDays(1);
+        if (index != null && baseDateString != null && compareDateString != null) {
+            LocalDate baseDate = LocalDate.parse(baseDateString, dtf);
+            LocalDate compareDate = LocalDate.parse(compareDateString, dtf);
 
-                List<HistoricalDataQuote> ratesToday = getHistoricalExchangeRates(index.getSymbol(), baseDateMinus.format(dtf), baseDate.format(dtf));
-                List<HistoricalDataQuote> ratesCompareDate = getHistoricalExchangeRates(index.getSymbol(), compareDateMinus.format(dtf), compareDate.format(dtf));
+            HistoricalDataQuote ratesToday = getRatesIndexFromBackupProvider(index, baseDate);
+            HistoricalDataQuote ratesCompareDate = getRatesIndexFromBackupProvider(index, compareDate);
 
-                if (ratesToday.size() < 1 || ratesCompareDate.size() < 1) {
-                    ratesToday.add(getRatesIndexFromBackupProvider(index, baseDate));
-                    ratesCompareDate.add(getRatesIndexFromBackupProvider(index, compareDate));
-                }
+            double closeToday = ratesToday.getClose();
+            log.info("closeToday: " + closeToday);
+            double closeCompareDate = ratesCompareDate.getClose();
+            log.info("closeCompareDate: " + closeCompareDate);
 
-                double closeToday = ratesToday.get(0).getClose();
-                log.info("closeToday: " + closeToday);
-                double closeCompareDate = ratesCompareDate.get(0).getClose();
-                log.info("closeCompareDate: " + closeCompareDate);
+            double rateProgress = (closeToday - closeCompareDate) / closeCompareDate * 100;
+            log.info("rateProgress: " + rateProgress);
 
-                double rateProgress = (closeToday - closeCompareDate) / closeCompareDate * 100;
-                log.info("rateProgress: " + rateProgress);
-
-                return rateProgress;
-            }
-            return -9999;
-        } catch (ParseException e) {
-            return -9999;
+            return rateProgress;
         }
+        return -9999;
     }
 
     private List<HistoricalDataQuote> getRatesIndexFromBackupProvider(StockIndex stockIndex, List<HistoricalDataQuote> compareStock) {

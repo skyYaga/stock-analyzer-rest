@@ -2,6 +2,7 @@ package eu.yaga.stockanalyzer.util;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -9,6 +10,7 @@ import java.util.List;
  * Automatically loaded properties for sending emails
  */
 @ConfigurationProperties(prefix = "email")
+@Validated
 @Component
 public class EmailProperties {
 
