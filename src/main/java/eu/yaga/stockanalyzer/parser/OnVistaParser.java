@@ -73,7 +73,10 @@ public class OnVistaParser {
         double currentRate = currentStockQuotesService.getCurrentRate(symbol);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate now = LocalDate.now();
-        while (currentRate == 0) {
+
+        int count = 0;
+        while (currentRate == 0 && count < 7) {
+            count++;
             try {
                 List<HistoricalDataQuote> historicalExchangeRates = historicalExchangeRateService.getHistoricalExchangeRates(symbol, now.minusDays(1).format(dtf), now.format(dtf));
                 if (historicalExchangeRates.size() > 0) {
@@ -83,6 +86,9 @@ public class OnVistaParser {
             } catch (ParseException e) {
                 log.error(e.getLocalizedMessage());
             }
+        }
+        if (currentRate == 0) {
+            throw new RuntimeException("Unable to receive current stock rate for " + symbol);
         }
         fundamentalData.setAsk(currentRate);
 
