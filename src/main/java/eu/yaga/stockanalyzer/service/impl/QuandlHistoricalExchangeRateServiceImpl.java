@@ -179,11 +179,15 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
             LocalDate dateTmp = date;
 
             int cnt = 0;
-            while (ratesSymbol.size() < 2 && cnt <= 10) {
+            while (ratesSymbol.size() < 2 && cnt <= 7) {
                 cnt++;
                 dateTmp = dateTmp.minusDays(1);
                 priorDay = dateTmp.format(dtf);
                 ratesSymbol = getHistoricalExchangeRates(symbol, priorDay, dateString);
+            }
+
+            if (ratesSymbol.size() < 2) {
+                throw new RuntimeException("Unable to get historical exchange rates for " + symbol);
             }
 
             //List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
