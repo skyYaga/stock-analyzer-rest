@@ -6,10 +6,12 @@ package eu.yaga.stockanalyzer.util;
 public class QuandlCode {
     private String code;
     private String currency;
+    private String closeColumnName;
 
-    public QuandlCode(String code, String currency) {
+    public QuandlCode(String code, String currency, String closeColumnName) {
         this.code = code;
         this.currency = currency;
+        this.closeColumnName = closeColumnName;
     }
 
     public String getCode() {
@@ -26,5 +28,13 @@ public class QuandlCode {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public String getCloseColumnName() {
+        return closeColumnName;
+    }
+
+    public void setCloseColumnName(String closeColumnName) {
+        this.closeColumnName = closeColumnName;
     }
 }

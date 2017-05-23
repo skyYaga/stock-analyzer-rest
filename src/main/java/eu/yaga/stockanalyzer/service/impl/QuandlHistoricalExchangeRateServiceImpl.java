@@ -111,7 +111,7 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
 
                 for (Row row : tabularResult) {
                     String dateString = row.getString("Date");
-                    double close = row.getDouble("Close");
+                    double close = row.getDouble(quandlCode.getCloseColumnName());
                     quoteList.add(new HistoricalDataQuote(symbol, dateString, close));
                 }
                 break;
@@ -136,18 +136,18 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
         switch (exchange) {
             case "F":
             case "DE":
-                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR"));
-                quandlCodeList.add(new QuandlCode(FSE_PREFIX + cleanSymbol + FSE_POSTFIX, "EUR"));
-                quandlCodeList.add(new QuandlCode(SSE_PREFIX + cleanSymbol, "EUR"));
+                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR", "Close"));
+                quandlCodeList.add(new QuandlCode(FSE_PREFIX + cleanSymbol + FSE_POSTFIX, "EUR", "Close"));
+                quandlCodeList.add(new QuandlCode(SSE_PREFIX + cleanSymbol, "EUR", "Last"));
                 break;
             case "US":
-                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD"));
-                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD"));
+                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD", "Close"));
+                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD", "Close"));
                 break;
             default:
-                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD"));
-                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR"));
-                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD"));
+                quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD", "Close"));
+                quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR", "Close"));
+                quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD", "Close"));
         }
 
         return quandlCodeList;
