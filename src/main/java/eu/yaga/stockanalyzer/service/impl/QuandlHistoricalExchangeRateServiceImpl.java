@@ -52,6 +52,8 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
     // Quandl Google finance
     private static final String GOOG_FRA_PREFIX = "GOOG/FRA_";
     private static final String GOOG_NASDAQ_PREFIX = "GOOG/NASDAQ_";
+    // Quandl Euronext Stock Exchange
+    private static final String EURONEXT_PREFIX = "EURONEXT/";
 
     private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private DateTimeFormatter dtfGermany = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -98,7 +100,7 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
         List<HistoricalDataQuote> quoteList = new ArrayList<>();
         QuandlSession session = QuandlSession.create(quandlProperties.getAuth().getToken());
         for (QuandlCode quandlCode : quandlCodeList) {
-            log.info("Querying: " + quandlCode.getCode() + " from: " + dateFrom + " to: " + dateTo);
+            log.info("Querying: " + quandlCode.getCode() + " closeColumn: " + quandlCode.getCloseColumnName() + " from: " + dateFrom + " to: " + dateTo);
             try {
                 TabularResult tabularResult = session.getDataSet(
                         DataSetRequest.Builder
@@ -144,6 +146,8 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
                 quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD", "Close"));
                 quandlCodeList.add(new QuandlCode(GOOG_NASDAQ_PREFIX + cleanSymbol, "USD", "Close"));
                 break;
+            case "AS":
+                quandlCodeList.add(new QuandlCode(EURONEXT_PREFIX + cleanSymbol, "EUR", "Last"));
             default:
                 quandlCodeList.add(new QuandlCode(US_PREFIX + cleanSymbol, "USD", "Close"));
                 quandlCodeList.add(new QuandlCode(GOOG_FRA_PREFIX + cleanSymbol, "EUR", "Close"));
