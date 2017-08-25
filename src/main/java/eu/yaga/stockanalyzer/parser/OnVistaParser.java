@@ -70,7 +70,8 @@ public class OnVistaParser {
 
         // KGV
         Map<String, String> earningsPerShare = parseEarningsPerShare(earningYears);
-        double currentRate = currentStockQuotesService.getCurrentRate(symbol);
+
+        double currentRate = 0;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate now = LocalDate.now();
 
