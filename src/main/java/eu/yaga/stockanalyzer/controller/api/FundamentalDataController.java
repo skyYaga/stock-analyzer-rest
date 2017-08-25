@@ -166,4 +166,22 @@ class FundamentalDataController {
 
         return fundamentalDataRepository.save(fundamentalData);
     }
+
+    /**
+     * This Controller enables all automatic ratings for fundamental data<br/>
+     *
+     * @return the fundamental data
+     */
+    @RequestMapping(value = "/enableratings", method = RequestMethod.PUT)
+    public void enableAllAutomaticRatings() {
+        List<FundamentalData> fundamentalDataList = fundamentalDataRepository.findAll();
+
+        for (FundamentalData fundamentalData : fundamentalDataList) {
+            if (!fundamentalData.isAutomaticRating()) {
+                log.info("Enabling Fundamental Data ratings for: " + fundamentalData);
+                fundamentalData.setAutomaticRating(true);
+                fundamentalDataRepository.save(fundamentalData);
+            }
+        }
+    }
 }
