@@ -1,62 +1,43 @@
 package eu.yaga.stockanalyzer.service.impl;
 
-import com.jimmoores.quandl.DataSetRequest;
-import com.jimmoores.quandl.QuandlSession;
-import com.jimmoores.quandl.Row;
-import com.jimmoores.quandl.TabularResult;
-import com.jimmoores.quandl.util.QuandlRuntimeException;
 import eu.yaga.stockanalyzer.model.FundamentalData;
 import eu.yaga.stockanalyzer.model.RateProgressBean;
 import eu.yaga.stockanalyzer.model.StockIndex;
+import eu.yaga.stockanalyzer.model.eodhd.EodhdQuote;
 import eu.yaga.stockanalyzer.model.historicaldata.HistoricalDataQuote;
 import eu.yaga.stockanalyzer.service.HistoricalExchangeRateService;
-import eu.yaga.stockanalyzer.util.HttpHelper;
-import eu.yaga.stockanalyzer.util.QuandlCode;
-import eu.yaga.stockanalyzer.util.QuandlProperties;
-import org.json.JSONObject;
+import eu.yaga.stockanalyzer.util.EodhdCode;
+import eu.yaga.stockanalyzer.util.EodhdProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
 import org.threeten.bp.DateTimeUtils;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.ZoneId;
 import org.threeten.bp.format.DateTimeFormatter;
 import org.threeten.bp.temporal.ChronoUnit;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
- * Implementation of the {@link HistoricalExchangeRateService}
+ * Implementation of the {@link HistoricalExchangeRateService} for eodhistoricaldata.com
  */
-public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchangeRateService {
+public class EodhdHistoricalExchangeRateServiceImpl implements HistoricalExchangeRateService {
 
     @Autowired
-    private QuandlProperties quandlProperties;
+    private EodhdProperties eodhdProperties;
 
-    private static final Logger log = LoggerFactory.getLogger(QuandlHistoricalExchangeRateServiceImpl.class);
+    @Autowired
+    private RestTemplate restTemplate;
 
-    // Quandl Frankfurt Stock Exchange / XETRA
-    private static final String FSE_PREFIX = "FSE/";
-    private static final String FSE_POSTFIX = "_X";
-    // Quandl Stuttgart Stock Exchange
-    private static final String SSE_PREFIX = "SSE/";
-    // Quandl US companies
-    private static final String US_PREFIX = "WIKI/";
-    // Quandl Google finance
-    private static final String GOOG_FRA_PREFIX = "GOOG/FRA_";
-    private static final String GOOG_NASDAQ_PREFIX = "GOOG/NASDAQ_";
-    // Quandl Euronext Stock Exchange
-    private static final String EURONEXT_PREFIX = "EURONEXT/";
+    private static final Logger log = LoggerFactory.getLogger(EodhdHistoricalExchangeRateServiceImpl.class);
+
 
     private DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private DateTimeFormatter dtfGermany = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    private final String BASE_URL = "https://eodhistoricaldata.com/api/eod/";
 
     /**
      * This method returns historical exchange Rates of the given stock
@@ -76,7 +57,7 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
             exchange = splitSymbol[1];
         }
 
-        List<QuandlCode> quandlCodeList = buildQuandlCode(cleanSymbol, exchange);
+        List<EodhdCode> eodhdCodeList = buildEodhdCode(cleanSymbol, exchange);
 
         log.info("Clean Symbol: " + cleanSymbol);
 
@@ -98,33 +79,23 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
         }
 
         List<HistoricalDataQuote> quoteList = new ArrayList<>();
-        QuandlSession session = QuandlSession.create(quandlProperties.getAuth().getToken());
-        for (QuandlCode quandlCode : quandlCodeList) {
-            log.info("Querying: " + quandlCode.getCode() + " closeColumn: " + quandlCode.getCloseColumnName() + " from: " + dateFrom + " to: " + dateTo);
+
+        String urlParams = "?period=d&fmt=json&api_token=" + eodhdProperties.getAuth().getToken()
+                + "&from=" + dateStringFrom + "&to=" + dateStringTo;
+
+        for (EodhdCode code : eodhdCodeList) {
+            EodhdQuote[] quotes = new EodhdQuote[0];
             try {
-                DataSetRequest request = DataSetRequest.Builder
-                        .of(quandlCode.getCode())
-                        .withStartDate(dateFrom)
-                        .withEndDate(dateTo)
-                        .build();
-                log.info("Requesting " + request);
-                TabularResult tabularResult = session.getDataSet(request);
+                quotes = restTemplate.getForObject(BASE_URL + code.getCode() + urlParams, EodhdQuote[].class);
+            } catch (Exception e) {
+                log.warn("error retrieving eod data");
+            }
 
-                log.info(tabularResult.toPrettyPrintedString());
-
-                for (Row row : tabularResult) {
-                    if (quandlCode.getCode().equals(US_PREFIX)) {
-                        if (!row.getString("TICKER").equals(cleanSymbol)) {
-                            continue;
-                        }
-                    }
-                    String dateString = row.getString("Date");
-                    double close = row.getDouble(quandlCode.getCloseColumnName());
-                    quoteList.add(new HistoricalDataQuote(symbol, dateString, close));
+            if (quotes.length > 0) {
+                for (EodhdQuote quote : quotes) {
+                    quoteList.add(new HistoricalDataQuote(code.getSymbol(), quote.getDate(), quote.getClose()));
                 }
                 break;
-            } catch (QuandlRuntimeException e) {
-                log.warn("Error requesting quandl code: " + quandlCode.getCode(), e);
             }
         }
 
@@ -132,35 +103,37 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
     }
 
     /**
-     * Generates a list of quandlCodes to try
+     * Generates a list of eodhdCodes to try
      * @param cleanSymbol the stocks symbol
      * @param exchange the symbol of the exchange
-     * @return a list of Strings with quandl codes
+     * @return a list of Strings with eodhd codes
      */
-    private List<QuandlCode> buildQuandlCode(String cleanSymbol, String exchange) {
+    private List<EodhdCode> buildEodhdCode(String cleanSymbol, String exchange) {
 
-        List<QuandlCode> quandlCodeList = new ArrayList<>();
+        List<EodhdCode> eodhdCodeList = new ArrayList<>();
 
-        switch (exchange) {
-            case "F":
-            case "DE":
-                quandlCodeList.add(new QuandlCode(cleanSymbol, GOOG_FRA_PREFIX + cleanSymbol, "EUR", "Close"));
-                quandlCodeList.add(new QuandlCode(cleanSymbol, FSE_PREFIX + cleanSymbol + FSE_POSTFIX, "EUR", "Close"));
-                quandlCodeList.add(new QuandlCode(cleanSymbol, SSE_PREFIX + cleanSymbol, "EUR", "Last"));
-                break;
-            case "US":
-                quandlCodeList.add(new QuandlCode(cleanSymbol, US_PREFIX + cleanSymbol, "USD", "Close"));
-                quandlCodeList.add(new QuandlCode(cleanSymbol, GOOG_NASDAQ_PREFIX + cleanSymbol, "USD", "Close"));
-                break;
-            case "AS":
-                quandlCodeList.add(new QuandlCode(cleanSymbol, EURONEXT_PREFIX + cleanSymbol, "EUR", "Last"));
-            default:
-                quandlCodeList.add(new QuandlCode(cleanSymbol, US_PREFIX + cleanSymbol, "USD", "Close"));
-                quandlCodeList.add(new QuandlCode(cleanSymbol, GOOG_FRA_PREFIX + cleanSymbol, "EUR", "Close"));
-                quandlCodeList.add(new QuandlCode(cleanSymbol, GOOG_NASDAQ_PREFIX + cleanSymbol, "USD", "Close"));
+        if (cleanSymbol.startsWith("^")) {
+            String cutSymbol = cleanSymbol.replace("^", "");
+            eodhdCodeList.add(new EodhdCode(cutSymbol, cutSymbol + ".INDX", null, null));
+        } else {
+            switch (exchange) {
+                case "F":
+                case "DE":
+                    eodhdCodeList.add(new EodhdCode(cleanSymbol, cleanSymbol + ".XETRA", "EUR", "Close"));
+                    eodhdCodeList.add(new EodhdCode(cleanSymbol, cleanSymbol + ".F", "EUR", "Close"));
+                    break;
+                case "US":
+                    eodhdCodeList.add(new EodhdCode(cleanSymbol, cleanSymbol + ".US", "USD", "Close"));
+                    break;
+                case "AS":
+                    eodhdCodeList.add(new EodhdCode(cleanSymbol, cleanSymbol + ".AS", "EUR", "Last"));
+                    break;
+                default:
+                    eodhdCodeList.add(new EodhdCode(cleanSymbol, cleanSymbol + ".US", "USD", "Close"));
+            }
         }
 
-        return quandlCodeList;
+        return eodhdCodeList;
     }
 
     /**
@@ -200,10 +173,7 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
                 throw new RuntimeException("Unable to get historical exchange rates for " + symbol);
             }
 
-            //List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
-            //if (ratesIndex.size() == 0) {
-            List<HistoricalDataQuote> ratesIndex = getRatesIndexFromBackupProvider(fundamentalData.getStockIndex(), ratesSymbol);
-            //}
+            List<HistoricalDataQuote> ratesIndex = getHistoricalExchangeRates(indexSymbol, priorDay, dateString);
 
             // calculate Data
             double closeSymbol = ratesSymbol.get(0).getClose();
@@ -377,15 +347,19 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
      */
     private double getIndexRateProgress(StockIndex index, String baseDateString, String compareDateString) {
         if (index != null && baseDateString != null && compareDateString != null) {
-            LocalDate baseDate = LocalDate.parse(baseDateString, dtf);
-            LocalDate compareDate = LocalDate.parse(compareDateString, dtf);
 
-            HistoricalDataQuote ratesToday = getRatesIndexFromBackupProvider(index, baseDate);
-            HistoricalDataQuote ratesCompareDate = getRatesIndexFromBackupProvider(index, compareDate);
+            List<HistoricalDataQuote> ratesToday = null;
+            List<HistoricalDataQuote> ratesCompareDate = null;
+            try {
+                ratesToday = getHistoricalExchangeRates(index.getSymbol(), compareDateString, baseDateString);
+                ratesCompareDate = getHistoricalExchangeRates(index.getSymbol(), compareDateString, baseDateString);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
-            double closeToday = ratesToday.getClose();
+            double closeToday = ratesToday.get(0).getClose();
             log.info("closeToday: " + closeToday);
-            double closeCompareDate = ratesCompareDate.getClose();
+            double closeCompareDate = ratesCompareDate.get(0).getClose();
             log.info("closeCompareDate: " + closeCompareDate);
 
             double rateProgress = (closeToday - closeCompareDate) / closeCompareDate * 100;
@@ -396,38 +370,4 @@ public class QuandlHistoricalExchangeRateServiceImpl implements HistoricalExchan
         return -9999;
     }
 
-    private List<HistoricalDataQuote> getRatesIndexFromBackupProvider(StockIndex stockIndex, List<HistoricalDataQuote> compareStock) {
-        List<HistoricalDataQuote> quotes = new ArrayList<>();
-
-        for (HistoricalDataQuote compareQuote : compareStock) {
-            quotes.add(getRatesIndexFromBackupProvider(stockIndex, LocalDate.parse(compareQuote.getDate(), dtf)));
-        }
-
-        return quotes;
-    }
-
-    private HistoricalDataQuote getRatesIndexFromBackupProvider(StockIndex index, LocalDate date) {
-        HistoricalDataQuote quote = new HistoricalDataQuote();
-
-        try {
-            String dateString = dtf.format(date);
-            String dateGermanString = dtfGermany.format(date);
-
-            URL idxUrl = new URL(index.getOnvistaApiUrl() + dateGermanString);
-            String resultJson = HttpHelper.queryHTML(idxUrl);
-            JSONObject jsonObject = new JSONObject(resultJson);
-
-            NumberFormat format = NumberFormat.getInstance(Locale.GERMANY);
-            Number number = format.parse(jsonObject.getString("close"));
-
-            quote.setSymbol(index.getSymbol());
-            quote.setDate(dateString);
-            quote.setClose(number.doubleValue());
-
-        } catch (MalformedURLException | ParseException e) {
-            log.error(e.getLocalizedMessage());
-        }
-
-        return quote;
-    }
 }

@@ -20,7 +20,8 @@ public class ApplicationConfig {
     @Bean
     public HistoricalExchangeRateService getHistoricalExchangeRateService() {
         //return new YahooHistoricalExchangeRateServiceImpl();
-        return new QuandlHistoricalExchangeRateServiceImpl();
+        //return new QuandlHistoricalExchangeRateServiceImpl();
+        return new EodhdHistoricalExchangeRateServiceImpl();
     }
 
     @Bean

@@ -7,3 +7,4 @@ email.fromEmail=
 email.fromName=
 email.listRecipient[0]=
 quandl.auth.token=
+eodhd.auth.token=

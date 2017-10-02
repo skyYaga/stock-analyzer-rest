@@ -3,13 +3,13 @@ package eu.yaga.stockanalyzer.util;
 /**
  * A utility class that contains the quandl code and the currency of the resource
  */
-public class QuandlCode {
+public class EodhdCode {
     private String symbol;
     private String code;
     private String currency;
     private String closeColumnName;
 
-    public QuandlCode(String symbol, String code, String currency, String closeColumnName) {
+    public EodhdCode(String symbol, String code, String currency, String closeColumnName) {
         this.symbol = symbol;
         this.code = code;
         this.currency = currency;
